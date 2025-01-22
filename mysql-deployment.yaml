@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+spec:
+  replicas: 1  # You can change this value if you need to scale
+  selector:
+    matchLabels:
+      app: mysql  # This will match the labels of the MySQL Pods
+  template:
+    metadata:
+      labels:
+        app: mysql  # This ensures the Service will target these Pods
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:latest
+          env:
+            - name: MYSQL_DATABASE
+              value: "laravel"  # Optional: Name of the database to create
+            - name: MYSQL_USER
+              value: "user"  # Optional: Username for the MySQL user
+            - name: MYSQL_ALLOW_EMPTY_PASSWORD
+              value: "yes"  # Allow the container to be started with no password
+         
+          ports:
+            - containerPort: 3306  # Default MySQL port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  selector:
+    app: mysql  # This matches the labels of the MySQL Pods
+  ports:
+    - protocol: TCP
+      port: 3306  # The port exposed inside the Kubernetes cluster
+      targetPort: 3306  # Port inside the MySQL container

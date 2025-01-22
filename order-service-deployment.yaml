@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      initContainers:
+        - name: migrate
+          image: user-service:latest  # Same image as the main app container
+          imagePullPolicy: IfNotPresent
+          command: ["php", "artisan", "migrate", "--force"]
+          env:
+            - name: DB_HOST
+              value: mysql-service
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_USER
+              value: "root"
+            - name: DB_CONNECTION
+              value: "mysql"
+            - name: DB_DATABASE
+              value: "laravel"
+            - name: QUEUE_CONNECTION
+              value: "redis"
+
+      containers:
+        - name: order-service
+          image: order-service:latest
+          imagePullPolicy: IfNotPresent 
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DB_HOST
+              value: mysql-service
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_USER
+              value: "root"
+            - name: DB_CONNECTION
+              value: "mysql"
+            - name: DB_DATABASE
+              value: "laravel"
+            - name: QUEUE_CONNECTION
+              value: "redis"
+            - name: REDIS_CLIENT
+              value: "predis"
+            - name: REDIS_HOST
+              value: redis
+            - name: QUEUE_DEFAULT
+              value: "orders_event"
+            - name: BROADCAST_DRIVER
+              value: "redis"
+         
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+spec:
+  selector:
+    app: order-service
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: NodePort

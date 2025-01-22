@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  user-service:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: mysql-service
+      DB_PORT: 3306
+      DB_DATABASE: user_service_db
+      DB_USERNAME: root
+      DB_PASSWORD: secret
+    depends_on:
+      - mysql-service
+
+  mysql-service:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: user_service_db
+    ports:
+      - "3306:3306"
